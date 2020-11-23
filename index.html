@@ -1,0 +1,154 @@
+<html>
+    <head>
+        <script src="node_modules/jquery/dist/jquery.js"></script>
+    </head>
+    <body>
+        <canvas id="canv" style="border: 1px solid black;" width="120" height="40"></canvas>
+
+
+        <div>
+            
+        </div>
+        <script>
+        var screenWidth = 120;
+        var screenHeight = 40;
+        var canvas = document.getElementById("canv");
+        var ctx = canvas.getContext("2d");
+        ctx.font = "0.5px consolas";
+        var columns = 90;
+        var rows    = 30;
+        var tileWidth  = Math.round(canvas.width / columns);
+        var tileHeight = Math.round(canvas.height / rows);
+        
+        // var posX = 8;
+        // var posY = 8;
+
+        
+        var fPlayerX = 8;
+        var fPlayerY = 8;
+        var fPlayerA = 0;
+
+        var map = "";
+        map += "################";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#              #";
+        map += "#       #      #";
+        map += "#              #";
+        map += "#               ";
+        map += "#              #";
+        map += "################";
+
+        nMapWidth = 16;
+        nMapHeight = 16;
+
+        fFOV = 3.14159 / 4.0;
+        fDepth = 16;
+        updateCanvas();
+
+        document.onkeypress = function (e) {
+            e = e || window.event;
+            var speed = 0.1
+            // use e.keyCode
+            if(e.keyCode == 97){ //A
+                fPlayerA -= 0.1;
+            } else if(e.keyCode == 100){ // D
+                fPlayerA += 0.1;
+            } else if(e.keyCode == 119){ //W
+                fPlayerX += Math.sin(fPlayerA) * speed;
+                fPlayerY += Math.cos(fPlayerA) * speed ;
+            } else if(e.keyCode == 115){ //S
+                fPlayerX -= Math.sin(fPlayerA) * speed ;
+                fPlayerY -= Math.cos(fPlayerA) * speed ;
+            }
+            updateCanvas();
+        };
+
+        function updateCanvas(){
+            
+            // while(1){
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for(let x=0; x< screenWidth; x++){
+                var fRayAngle = (fPlayerA - fFOV / 2) + (x / screenWidth) * fFOV;
+                var fDistanceToWall = 1;
+
+                var bHitWall = false;
+                var fEyeX = Math.sin(fRayAngle);
+                var fEyeY = Math.cos(fRayAngle);
+
+                while(!bHitWall && fDistanceToWall < fDepth){
+                    fDistanceToWall += 1;
+                    var nTestX = parseInt(fPlayerX + fEyeX * fDistanceToWall);
+                    var nTestY = parseInt(fPlayerY + fEyeY * fDistanceToWall);
+                    if(nTestX < 0 || nTestX >= nMapWidth || nTestY < 0 || nTestY >= nMapHeight){
+                        bHitWall = true;
+                        fDistanceToWall = fDepth;
+                    } else {
+
+                        if(map[nTestY * nMapWidth + nTestX] == "#"){
+                            bHitWall = true;
+                        } 
+                    }
+                }
+                var nCeiling = (screenHeight /2) - screenHeight / fDistanceToWall;
+                var nFloor = screenHeight - nCeiling;
+
+
+                for (let y = 0; y < screenHeight; y++){
+                    // console.log(x + "_" + y);
+                    if(y < nCeiling){
+                        ctx.fillText(' ', x * tileWidth, y * tileHeight+1);
+
+                    }
+                    else if(y > nCeiling && y <= nFloor){
+                        var nShade = ' ';
+                        if(fDistanceToWall <= fDepth / 4)
+                            nShade = '&#x2588' ;
+                        else if (fDistanceToWall < fDepth / 3)
+                            nShade = '&#x2593';
+                        else if (fDistanceToWall < fDepth / 2)
+                            nShade = '&#x2592';
+                        else if (fDistanceToWall < fDepth)
+                            nShade = '&#x2591';
+                        else
+                            nShade = ' ';
+
+                        ctx.fillText(nShade, x * tileWidth, y * tileHeight+1);
+                    }
+                    else{
+                        var b = 1 - (y - screenHeight / 2) / (screenHeight / 2)
+                        // console.log(b);
+                        if (b < 0.25)
+                            nShade = '#';
+                        else if (b < 0.5)
+                            nShade = 'x';
+                        else if (b < 0.75)
+                            nShade = '.';
+                        else if (b < 0.9)
+                            nShade = '-';
+                        else
+                            nShade = ' ';
+
+
+                        ctx.fillText(nShade, x * tileWidth, y * tileHeight+1);
+
+                    }
+                }
+            } ; 
+        }
+            
+
+
+              
+
+
+        </script>
+    </body>
+</html>
